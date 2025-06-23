@@ -1,29 +1,30 @@
-from utils import generate_schedule
-import pandas as pd
-import os
-from datetime import date
+name: Weekly Shift Scheduler
 
-def main():
-    # 員工名單
-    employees = ['芷芸','婷瑩','冠汝','芬萍','勇得','婉霏','鈺姍','欣怡',
-                 '文雄','詣勛','俊穎','琦葳','乙玲','宛淇','惠琳','丁丁']
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # 每週日執行（UTC 時間）
+  workflow_dispatch:      # 可手動執行
 
-    # 呼叫 utils.py 產生班表紀錄：list of dicts
-    schedule_records = generate_schedule(employees, weeks=1)
+jobs:
+  schedule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    # 轉為 DataFrame → 員工 x 日期 的橫向班表格式
-    df = pd.DataFrame(schedule_records)
-    pivot_df = df.pivot(index='員工', columns='日期', values='班別').fillna('')
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-    # 確保 output 資料夾存在
-    os.makedirs('output', exist_ok=True)
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-    # 儲存為 Excel（檔名含當天日期）
-    today_str = date.today().isoformat()
-    filepath = f'output/schedule_{today_str}.xlsx'
-    pivot_df.to_excel(filepath)
+      - name: Run schedule script
+        run: python scheduler.py
 
-    print("✅ 排班完成！已輸出至：", filepath)
-
-if __name__ == "__main__":
-    main()
+      - name: Upload result to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: schedule
+          path: output/schedule_*.xlsx
