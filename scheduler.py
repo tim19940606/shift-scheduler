@@ -4,6 +4,11 @@ import os
 from datetime import date
 
 def main():
+    df_raw = pd.DataFrame(sched)
+dupes = df_raw[df_raw.duplicated(subset=['員工', '日期'], keep=False)]
+if not dupes.empty:
+    print("⚠️ 發現重複班別資料：")
+    print(dupes)
     employees = ['芷芸','婷瑩','冠汝','芬萍','勇得','婉霏','鈺姍','欣怡','文雄','詣勛','俊穎','琦葳','乙玲','宛淇','惠琳','丁丁']
     sched = generate_schedule(employees, weeks=1)
     df = pd.DataFrame(sched).pivot_table(
